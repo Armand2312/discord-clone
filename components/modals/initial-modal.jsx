@@ -31,18 +31,31 @@ export default function InitialModal() {
             alert('Please select a file first.');
             return;
         }
+    
+        // Allowed image MIME types
+        const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    
+        // Validate the file type
+        if (!allowedImageTypes.includes(file.type)) {
+            alert('Only image files (JPEG, PNG, GIF, WEBP) are allowed.');
+            return;
+        }
+    
         try {
-            // 1. Get pre-signed URL from the API route
+            // Define the key prefix type (e.g., for server images)
+            const type = 'server-image';
+    
+            // 1. Get pre-signed URL from the API route, including the file type
             const response = await fetch(
-                `/api/s3-upload?fileName=${file.name}&contentType=${file.type}`
+                `/api/s3-upload?fileName=${file.name}&contentType=${file.type}&type=${type}`
             );
-
+    
             if (!response.ok) {
                 throw new Error('Failed to get pre-signed URL');
             }
-
+    
             const { url } = await response.json();
-
+    
             // 2. Upload file to S3 using the pre-signed URL
             const uploadResponse = await fetch(url, {
                 method: 'PUT',
@@ -51,7 +64,7 @@ export default function InitialModal() {
                     'Content-Type': file.type
                 }
             });
-
+    
             if (uploadResponse.ok) {
                 alert('File uploaded successfully!');
             } else {
@@ -63,7 +76,8 @@ export default function InitialModal() {
             alert('An error occurred while uploading the file.');
         }
     };
-
+    
+    
     useEffect(() => {
         setIsMounted(true);
     }, []);
@@ -106,14 +120,14 @@ export default function InitialModal() {
                                 <FormField control={form.control} name="imageUrl" render={({ field }) => (
                                     <FormItem>
                                         <FormControl>
-                                            <FileUpload/>
-                                            
+                                            <FileUpload />
+
                                         </FormControl>
                                     </FormItem>
-                                )}/>
+                                )} />
 
-                                
-                                {/*  <input type="file" onChange={handleFileChange} />
+
+                                 {/* <input type="file" onChange={handleFileChange} />
                                 <button onClick={uploadFile}>Upload</button> */}
 
                             </div>
