@@ -20,6 +20,6 @@ export default async function SetupPage() {
         return redirect(`/servers/${server.id}`)
     }
     return (
-       <InitialModal></InitialModal>
+       <InitialModal profile={profile}/>
     )
 }
