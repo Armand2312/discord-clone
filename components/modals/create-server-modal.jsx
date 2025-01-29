@@ -6,22 +6,37 @@ import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import Spinner from "../ui/spinner";
 import { useRouter } from "next/navigation";
+import { useModal } from "@/hooks/use-modal-store";
 
-export default function InitialModal({ profile }) {
-    const [isMounted, setIsMounted] = useState(false);
+export default function CreateServerModal() {
     const [isLoading, setIsLoading] = useState(false);
     const [file, setFile] = useState(null);
-    const userID = profile.id.split("-")[0];
+    const [profile, setProfile] = useState(null);
+    const { isOpen, onClose, type } = useModal();
+    const isModalOpen = isOpen && type === "createServer";
     const router = useRouter();
 
-
-    // Check mounted
+    //Fetch user profile
     useEffect(() => {
-        setIsMounted(true);
+        async function fetchProfile() {
+            try {
+                const response = await fetch("/api/profile");
+                if (!response.ok) {
+                    throw new Error("Response was not ok.")
+                }
+                const data = await response.json();
+                setProfile(data.profile);
+
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        fetchProfile();
     }, []);
 
-    if (!isMounted) {
-        return null;
+    function handleClose() {
+        setFile(null);
+        onClose();
     }
 
     //Initial form values
@@ -37,6 +52,8 @@ export default function InitialModal({ profile }) {
     // File upload
     const uploadFile = async () => {
         console.log("uploading")
+
+        const userID = profile.id.split("-")[0];
 
         if (!file) {
             alert('Please select a file first.');
@@ -101,7 +118,7 @@ export default function InitialModal({ profile }) {
                     imageUrl: imageUrl,
                 }
 
-                console.log("body:" , body)
+                console.log("body:", body)
                 const serverResponse = await fetch("/api/servers", {
                     method: "POST",
                     headers: {
@@ -111,8 +128,9 @@ export default function InitialModal({ profile }) {
                 })
                 console.log("server response >>", serverResponse);
                 if (serverResponse.ok) {
+                    alert("Server created.");
+                    handleClose();
                     router.refresh();
-                    window.location.reload();
                 }
                 else {
                     alert("An error occurred while creating server.")
@@ -129,7 +147,7 @@ export default function InitialModal({ profile }) {
     }
 
     return (
-        <Dialog open>
+        <Dialog open={isModalOpen} onOpenChange={handleClose}>
             <DialogContent className="bg-white text-black p-0 overflow-hidden">
                 <header className="pt-8 px-6">
                     <DialogTitle className="text-2xl text-center">
@@ -146,7 +164,7 @@ export default function InitialModal({ profile }) {
                             {/* Image Upload */}
                             <div>
                                 <div className="flex items-center justify-center text-center">
-                                    <FileUpload profile={profile} file={file} setFile={setFile} isLoading={isLoading} />
+                                    <FileUpload file={file} setFile={setFile} isLoading={isLoading} />
                                 </div>
                             </div>
 
@@ -154,7 +172,7 @@ export default function InitialModal({ profile }) {
                             {/* Server Name */}
                             <div>
                                 <label className="flex flex-col">Server Name
-                                    <Field name="serverName"  className="border border-gray-400 rounded-md p-1" placeholder="Server Name"></Field>
+                                    <Field name="serverName" className="border border-gray-400 rounded-md p-1 dark:text-white" placeholder="Server Name"></Field>
                                 </label>
                                 <div className="text-red-600">
                                     <ErrorMessage name="serverName" />

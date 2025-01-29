@@ -6,8 +6,6 @@ import { useState } from "react";
 export default function FileUpload({ file, setFile, isLoading }) {
     const [previewUrl, setPreviewUrl] = useState(null);
 
-    //console.log(profile.id)
-
     const handleFileChange = (e) => {
         if (!e || !e.target.files[0]) {
             setFile(null);
